@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmarking AI Adoption Across Teams</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg-deep: #120C26;
+    --bg-mid: #1C1434;
+    --bg-card: #231A41;
+    --bg-card-alt: #2B2050;
+    --ghost: #3C345A;
+    --ghost-light: #4D4470;
+    --white: #F0EEF5;
+    --white-dim: #8C879F;
+    --coral: #FF7F66;
+    --coral-glow: rgba(255, 127, 102, 0.12);
+    --amber: #FFC346;
+    --amber-glow: rgba(255, 195, 70, 0.12);
+    --cyan: #5AD2E6;
+    --cyan-glow: rgba(90, 210, 230, 0.12);
+    --green: #78DCA0;
+    --green-glow: rgba(120, 220, 160, 0.12);
+    --lavender: #A08CDC;
+    --lavender-glow: rgba(160, 140, 220, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Inter', -apple-system, sans-serif;
+  }
+
+  /* ── Slide Container ── */
+  .deck {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    overflow: hidden;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Bloom background layers ── */
+  .bloom-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Slide counter ── */
+  .slide-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(140, 135, 160, 0.5);
+    letter-spacing: 1px;
+    z-index: 100;
+  }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--coral), var(--cyan), var(--lavender));
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  /* ── Shared Typography ── */
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+  }
+  .rule {
+    width: 80px;
+    height: 2px;
+    border-radius: 1px;
+    margin-bottom: 20px;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+  @keyframes barGrow {
+    from { width: 0; }
+  }
+  @keyframes bloomDrift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(20px, -15px) scale(1.05); }
+    66% { transform: translate(-15px, 10px) scale(0.95); }
+  }
+
+  .slide.active .anim-1 { animation: fadeUp 0.6s ease 0.1s both; }
+  .slide.active .anim-2 { animation: fadeUp 0.6s ease 0.25s both; }
+  .slide.active .anim-3 { animation: fadeUp 0.6s ease 0.4s both; }
+  .slide.active .anim-4 { animation: fadeUp 0.6s ease 0.55s both; }
+  .slide.active .anim-5 { animation: fadeUp 0.6s ease 0.7s both; }
+  .slide.active .anim-6 { animation: fadeUp 0.6s ease 0.85s both; }
+  .slide.active .anim-7 { animation: fadeUp 0.6s ease 1.0s both; }
+  .slide.active .anim-fade { animation: fadeIn 0.8s ease 0.3s both; }
+
+  /* ── Presenter notes toggle ── */
+  .notes-overlay {
+    display: none;
+    position: fixed;
+    bottom: 40px; left: 30px; right: 30px;
+    background: rgba(18, 12, 38, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--ghost);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 14px;
+    color: var(--white-dim);
+    line-height: 1.6;
+    z-index: 200;
+    max-height: 30vh;
+    overflow-y: auto;
+  }
+  .notes-overlay.show { display: block; }
+  .notes-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--ghost-light);
+    margin-bottom: 8px;
+  }
+
+  /* ── Help overlay ── */
+  .help-overlay {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(18, 12, 38, 0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--ghost);
+    border-radius: 16px;
+    padding: 30px 40px;
+    z-index: 300;
+    color: var(--white-dim);
+    font-size: 14px;
+    line-height: 2;
+  }
+  .help-overlay.show { display: block; }
+  .help-overlay kbd {
+    background: var(--ghost);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--white);
+  }
+
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 1: TITLE
+     ════════════════════════════════════════════════════ */
+  .s-title {
+    background: var(--bg-deep);
+    padding: 0 8%;
+    justify-content: center;
+  }
+  .s-title .bloom-bg {
+    background:
+      radial-gradient(ellipse 50% 50% at 25% 30%, var(--coral-glow), transparent),
+      radial-gradient(ellipse 40% 40% at 75% 20%, var(--cyan-glow), transparent),
+      radial-gradient(ellipse 45% 45% at 50% 80%, var(--lavender-glow), transparent);
+    animation: bloomDrift 25s ease-in-out infinite;
+  }
+  .s-title .content { position: relative; z-index: 1; max-width: 900px; }
+  .s-title h1 {
+    font-size: clamp(48px, 6vw, 80px);
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: 4px;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+  .s-title h2 {
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 400;
+    color: var(--white-dim);
+    margin-bottom: 28px;
+  }
+  .s-title .tagline {
+    font-size: 16px;
+    font-style: italic;
+    color: var(--ghost-light);
+    margin-bottom: 40px;
+  }
+  .s-title .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ghost-light);
+    letter-spacing: 1px;
+  }
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 2: CONTEXT + POLL
+     ════════════════════════════════════════════════════ */
+  .s-context {
+    background: var(--bg-deep);
+    padding: 5% 6%;
+  }
+  .s-context .bloom-bg {
+    background:
+      radial-gradient(ellipse 40% 50% at 20% 50%, var(--green-glow), transparent),
+      radial-gradient(ellipse 35% 40% at 80% 40%, var(--amber-glow), transparent);
+    animation: bloomDrift 20s ease-in-out infinite;
+  }
+  .s-context .split {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    height: 100%;
+    align-items: center;
+  }
+  .context-card {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 16px;
+    padding: 36px;
+  }
+  .context-card h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  .context-card .subtitle {
+    font-size: 12px;
+    color: var(--white-dim);
+    margin-bottom: 20px;
+  }
+  .context-card .divider {
+    width: 60px; height: 1px;
+    background: var(--ghost);
+    margin: 16px 0;
+  }
+  .context-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .context-card li {
+    font-size: 14px;
+    color: var(--white-dim);
+    padding: 6px 0 6px 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .context-card li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 14px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--ghost-light);
+  }
+  .context-card .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--ghost-light);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .poll-card {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 16px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .poll-card .big-q {
+    position: absolute;
+    top: -20px; right: -10px;
+    font-size: 180px;
+    font-weight: 800;
+    color: rgba(60, 52, 90, 0.3);
+    line-height: 1;
+  }
+  .poll-card .poll-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--amber);
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .poll-card h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.35;
+    margin-bottom: 30px;
+    position: relative;
+  }
+  .poll-scale {
+    position: relative;
+    padding: 0 4px;
+    margin-bottom: 30px;
+  }
+  .poll-scale-line {
+    height: 2px;
+    background: var(--ghost);
+    border-radius: 1px;
+    position: relative;
+  }
+  .poll-scale-marks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  .poll-scale-marks span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+  .poll-card .poll-cta {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ghost-light);
+    position: relative;
+  }
+
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 3: THE NUMBERS
+     ════════════════════════════════════════════════════ */
+  .s-numbers {
+    background: var(--bg-deep);
+    padding: 5% 6%;
+  }
+  .s-numbers .bloom-bg {
+    background:
+      radial-gradient(ellipse 50% 50% at 20% 40%, var(--coral-glow), transparent),
+      radial-gradient(ellipse 40% 40% at 80% 60%, var(--cyan-glow), transparent);
+    animation: bloomDrift 22s ease-in-out infinite;
+  }
+  .s-numbers .content {
+    position: relative; z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .s-numbers h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 30px;
+  }
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .big-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .big-stat-card .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--white-dim);
+    margin-bottom: 8px;
+  }
+  .big-stat-card .stat-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(64px, 8vw, 96px);
+    font-weight: 700;
+    color: var(--coral);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .big-stat-card .stat-sub {
+    font-size: 13px;
+    color: var(--white-dim);
+    margin-bottom: 16px;
+  }
+  .big-stat-card .stat-note {
+    font-size: 12px;
+    color: var(--ghost-light);
+    border-top: 1px solid var(--ghost);
+    padding-top: 14px;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .stat-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stat-row {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .stat-row .row-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    min-width: 80px;
+  }
+  .stat-row:nth-child(1) .row-num { color: var(--cyan); }
+  .stat-row:nth-child(2) .row-num { color: var(--amber); }
+  .stat-row:nth-child(3) .row-num { color: var(--green); }
+  .stat-row .row-text {
+    font-size: 14px;
+    color: var(--white-dim);
+    line-height: 1.4;
+  }
+  .stat-row .row-source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ghost-light);
+    margin-top: 4px;
+  }
+
+  .numbers-footer {
+    background: var(--bg-card-alt);
+    border-radius: 10px;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .numbers-footer span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--white-dim);
+    white-space: nowrap;
+  }
+  .numbers-footer strong { color: var(--white); }
+
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 4: SCORE YOURSELF
+     ════════════════════════════════════════════════════ */
+  .s-score {
+    background: var(--bg-deep);
+    padding: 5% 6%;
+  }
+  .s-score .bloom-bg {
+    background:
+      radial-gradient(ellipse 35% 40% at 30% 30%, var(--lavender-glow), transparent),
+      radial-gradient(ellipse 35% 35% at 70% 70%, var(--green-glow), transparent);
+    animation: bloomDrift 18s ease-in-out infinite;
+  }
+  .s-score .content {
+    position: relative; z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .s-score .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .s-score h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .s-score .scan-prompt {
+    font-size: 13px;
+    color: var(--white-dim);
+    margin-top: 4px;
+  }
+  .qr-block {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .qr-block .qr-placeholder {
+    width: 120px; height: 120px;
+    background: var(--white);
+    border-radius: 8px;
+    margin: 0 auto 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+  .qr-block .qr-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--white-dim);
+  }
+
+  .dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .dim-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 24px;
+    border: 1px solid var(--ghost);
+    position: relative;
+    overflow: hidden;
+  }
+  .dim-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .dim-card:nth-child(1)::before { background: var(--coral); }
+  .dim-card:nth-child(2)::before { background: var(--cyan); }
+  .dim-card:nth-child(3)::before { background: var(--amber); }
+  .dim-card:nth-child(4)::before { background: var(--green); }
+
+  .dim-card .dim-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .dim-card .dim-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--white-dim);
+    text-transform: uppercase;
+  }
+  .dim-card .dim-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .dim-card:nth-child(1) .dim-stat { color: var(--coral); }
+  .dim-card:nth-child(2) .dim-stat { color: var(--cyan); }
+  .dim-card:nth-child(3) .dim-stat { color: var(--amber); }
+  .dim-card:nth-child(4) .dim-stat { color: var(--green); }
+
+  .dim-card .dim-desc {
+    font-size: 12px;
+    color: var(--white-dim);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .dim-card .dim-question {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--ghost-light);
+    background: rgba(60, 52, 90, 0.3);
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 5: MATURITY MODEL
+     ════════════════════════════════════════════════════ */
+  .s-maturity {
+    background: var(--bg-deep);
+    padding: 5% 6%;
+  }
+  .s-maturity .bloom-bg {
+    background:
+      radial-gradient(ellipse 30% 40% at 17% 50%, var(--coral-glow), transparent),
+      radial-gradient(ellipse 30% 40% at 50% 50%, var(--cyan-glow), transparent),
+      radial-gradient(ellipse 30% 40% at 83% 50%, var(--green-glow), transparent);
+    animation: bloomDrift 22s ease-in-out infinite;
+  }
+  .s-maturity .content {
+    position: relative; z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .s-maturity h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 30px;
+  }
+
+  .phase-timeline {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .phase-timeline::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 5%; right: 5%;
+    height: 2px;
+    background: var(--ghost);
+  }
+  .phase-col {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    padding: 0 12px;
+  }
+  .phase-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    margin: 12px auto 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .phase-col:nth-child(1) .phase-dot { background: var(--white-dim); box-shadow: 0 0 12px rgba(140,135,160,0.4); }
+  .phase-col:nth-child(2) .phase-dot { background: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+  .phase-col:nth-child(3) .phase-dot { background: var(--green); box-shadow: 0 0 16px var(--green-glow); }
+
+  .phase-card {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: left;
+  }
+  .phase-card .phase-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .phase-col:nth-child(1) .phase-num { color: var(--white-dim); }
+  .phase-col:nth-child(2) .phase-num { color: var(--cyan); }
+  .phase-col:nth-child(3) .phase-num { color: var(--green); }
+
+  .phase-card .phase-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .phase-card .phase-range {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--ghost-light);
+    margin-bottom: 14px;
+  }
+  .phase-card .phase-divider {
+    width: 40px; height: 1px;
+    background: var(--ghost);
+    margin-bottom: 14px;
+  }
+  .phase-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .phase-card li {
+    font-size: 13px;
+    color: var(--white-dim);
+    padding: 5px 0 5px 14px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .phase-card li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+  .phase-col:nth-child(1) li::before { background: var(--white-dim); }
+  .phase-col:nth-child(2) li::before { background: var(--cyan); }
+  .phase-col:nth-child(3) li::before { background: var(--green); }
+
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 6: FRAMEWORK
+     ════════════════════════════════════════════════════ */
+  .s-framework {
+    background: var(--bg-deep);
+    padding: 5% 6%;
+  }
+  .s-framework .bloom-bg {
+    background:
+      radial-gradient(ellipse 40% 40% at 50% 30%, var(--lavender-glow), transparent),
+      radial-gradient(ellipse 30% 30% at 20% 70%, var(--amber-glow), transparent);
+    animation: bloomDrift 24s ease-in-out infinite;
+  }
+  .s-framework .content {
+    position: relative; z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .s-framework h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .s-framework .sub {
+    font-size: 14px;
+    color: var(--white-dim);
+    margin-bottom: 28px;
+  }
+
+  .fw-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .fw-row {
+    background: var(--bg-card);
+    border: 1px solid var(--ghost);
+    border-radius: 12px;
+    padding: 18px 24px;
+    display: grid;
+    grid-template-columns: 200px 1fr 80px;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .fw-row::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .fw-row:nth-child(1)::before { background: var(--coral); }
+  .fw-row:nth-child(2)::before { background: var(--cyan); }
+  .fw-row:nth-child(3)::before { background: var(--amber); }
+  .fw-row:nth-child(4)::before { background: var(--green); }
+  .fw-row:nth-child(5)::before { background: var(--lavender); }
+
+  .fw-row .fw-dim {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .fw-row .fw-desc {
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+  .fw-row .fw-weight {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: right;
+  }
+  .fw-row:nth-child(1) .fw-weight { color: var(--coral); }
+  .fw-row:nth-child(2) .fw-weight { color: var(--cyan); }
+  .fw-row:nth-child(3) .fw-weight { color: var(--amber); }
+  .fw-row:nth-child(4) .fw-weight { color: var(--green); }
+  .fw-row:nth-child(5) .fw-weight { color: var(--lavender); }
+
+  .fw-cta {
+    background: var(--bg-card-alt);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: var(--white-dim);
+  }
+  .fw-cta strong { color: var(--white); }
+
+
+  /* ════════════════════════════════════════════════════
+     SLIDE 7: DISCUSSION
+     ════════════════════════════════════════════════════ */
+  .s-discuss {
+    background: var(--bg-deep);
+    padding: 0 8%;
+    justify-content: center;
+  }
+  .s-discuss .bloom-bg {
+    background:
+      radial-gradient(ellipse 50% 50% at 30% 50%, var(--lavender-glow), transparent),
+      radial-gradient(ellipse 40% 40% at 70% 40%, var(--coral-glow), transparent);
+    animation: bloomDrift 20s ease-in-out infinite;
+  }
+  .s-discuss .content {
+    position: relative; z-index: 1;
+    max-width: 800px;
+  }
+  .s-discuss h2 {
+    font-size: clamp(36px, 5vw, 52px);
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 30px;
+  }
+  .discuss-list {
+    list-style: none;
+    padding: 0;
+  }
+  .discuss-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(60, 52, 90, 0.5);
+    font-size: 18px;
+    color: var(--white-dim);
+    line-height: 1.4;
+  }
+  .discuss-list li:last-child { border-bottom: none; }
+  .discuss-list .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    min-width: 24px;
+  }
+  .discuss-list li:nth-child(1) .q-num { color: var(--coral); }
+  .discuss-list li:nth-child(2) .q-num { color: var(--cyan); }
+  .discuss-list li:nth-child(3) .q-num { color: var(--amber); }
+  .discuss-list li:nth-child(4) .q-num { color: var(--green); }
+
+  .s-discuss .qr-corner {
+    position: absolute;
+    bottom: 40px; right: 0;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide s-title active" data-notes="Welcome everyone. Today I want to tackle a question I know we're all asking: in this Cambrian explosion of AI creativity, where should our teams actually be? I'll share some industry benchmarks, we'll score ourselves live, and I'll propose a framework for the council. Let's start with a quick gut check.">
+    <div class="bloom-bg"></div>
+    <div class="content">
+      <div class="rule anim-1" style="background: var(--coral);"></div>
+      <h1 class="anim-2">BENCHMARKING</h1>
+      <h2 class="anim-3">AI Adoption Across Teams</h2>
+      <div class="tagline anim-4">Are we getting lapped, or right on target?</div>
+      <div class="rule anim-5" style="background: var(--ghost); width: 40px;"></div>
+      <div class="meta anim-6">Product Council &middot; April 2026</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: CONTEXT + POLL -->
+  <div class="slide s-context" data-notes="Quick intro: I'm Darren, EVP Product at CBS Digital. About 250 people across Product, Design, Engineering. We're in pockets of adoption right now. Before I show any data — quick poll: what percentage of your engineering output do you think is AI-authored today? Shout it out. Keep your number in mind. I'm going to show you what 135,000 developers actually measured.">
+    <div class="bloom-bg"></div>
+    <div class="split">
+      <div class="context-card anim-1">
+        <h3>My Working Context</h3>
+        <div class="subtitle">Darren Brelesky &middot; EVP, Product &middot; CBS Digital</div>
+        <div class="divider"></div>
+        <ul>
+          <li>~250 people across Product, Design, Engineering</li>
+          <li>Pockets of AI adoption — some teams shipping, others experimenting</li>
+          <li>Feeling the tension: stay energized by possibilities while setting realistic goals</li>
+        </ul>
+        <div class="section-label" style="margin-top: 24px;">What I'm wrestling with</div>
+        <div class="divider"></div>
+        <ul>
+          <li>How much of my eng team should focus on AI delivery?</li>
+          <li>Are we getting lapped or right on target?</li>
+          <li>Can we benchmark this across the council?</li>
+        </ul>
+      </div>
+      <div class="poll-card anim-2">
+        <div class="big-q">?</div>
+        <div class="poll-label">QUICK POLL</div>
+        <h3>What percentage of your engineering output is AI-authored today?</h3>
+        <div class="poll-scale">
+          <div class="poll-scale-line"></div>
+          <div class="poll-scale-marks">
+            <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%+</span>
+          </div>
+        </div>
+        <div class="poll-cta">Shout it out. No wrong answers.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: THE NUMBERS -->
+  <div class="slide s-numbers" data-notes="Remember your number? The industry average is 22% of merged code is AI-authored, across 135,000 developers. 88% of orgs are using AI somewhere, 82% of developers use AI tools weekly, and Gartner says 40% of enterprise apps will have AI agents by end of year. The leading companies are already at 41-42% AI code. The sweet spot is 25-40%. Average developer saves 3.6 hours a week.">
+    <div class="bloom-bg"></div>
+    <div class="content">
+      <h2 class="anim-1">The Numbers</h2>
+      <div class="numbers-grid">
+        <div class="big-stat-card anim-2">
+          <div class="stat-label">AI-AUTHORED CODE</div>
+          <div class="stat-number">22%</div>
+          <div class="stat-sub">of merged code &middot; 135K+ devs surveyed</div>
+          <div class="stat-note">Sweet spot: 25-40%<br>Above 40% = rising tech debt</div>
+        </div>
+        <div class="stat-stack">
+          <div class="stat-row anim-3">
+            <div class="row-num">88%</div>
+            <div>
+              <div class="row-text">of orgs use AI in at least one function</div>
+              <div class="row-source">Deloitte 2026</div>
+            </div>
+          </div>
+          <div class="stat-row anim-4">
+            <div class="row-num">82%</div>
+            <div>
+              <div class="row-text">of developers use AI tools weekly</div>
+              <div class="row-source">DX Q4 2025</div>
+            </div>
+          </div>
+          <div class="stat-row anim-5">
+            <div class="row-num">40%</div>
+            <div>
+              <div class="row-text">of enterprise apps will have AI agents by EOY '26</div>
+              <div class="row-source">Gartner</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="numbers-footer anim-6">
+        <span>Leaders: <strong>41-42%</strong> AI code</span>
+        <span>Avg dev saves <strong>3.6 hrs/week</strong></span>
+        <span><strong>33-36%</strong> reduction in dev time</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: SCORE YOURSELF -->
+  <div class="slide s-score" data-notes="This is the interactive moment. Open the link on your phone. You'll see five dimensions. For each one, score your org 1 to 5. While you're filling it out, let me walk through the benchmarks. Engineering: 22% average, leaders at 41-42%. Testing: 89% piloting but only 25% auto coverage. Consumer Insights: 68% of marketing teams use AI daily. Talent: only 20% of orgs say they're AI-ready — that's the biggest gap.">
+    <div class="bloom-bg"></div>
+    <div class="content">
+      <div class="header-row anim-1">
+        <div>
+          <h2>Score Your Organization</h2>
+          <div class="scan-prompt">Open the scorecard on your phone. Rate each dimension 1-5.</div>
+        </div>
+        <div class="qr-block">
+          <div class="qr-placeholder">📱</div>
+          <div class="qr-label">SCAN TO SCORE</div>
+        </div>
+      </div>
+      <div class="dim-grid">
+        <div class="dim-card anim-2">
+          <div class="dim-top">
+            <div class="dim-name">Engineering</div>
+            <div class="dim-stat">22-42%</div>
+          </div>
+          <div class="dim-desc">Industry avg: 22% of merged code. Leaders: 41-42%. Sweet spot: 25-40%.</div>
+          <div class="dim-question">How much of your code is AI-authored?</div>
+        </div>
+        <div class="dim-card anim-3">
+          <div class="dim-top">
+            <div class="dim-name">Testing & QA</div>
+            <div class="dim-stat">89%</div>
+          </div>
+          <div class="dim-desc">89% piloting AI QA. 25% avg auto coverage. Target: 50%+.</div>
+          <div class="dim-question">Is AI embedded in your test pipeline?</div>
+        </div>
+        <div class="dim-card anim-4">
+          <div class="dim-top">
+            <div class="dim-name">Consumer Insights</div>
+            <div class="dim-stat">68%</div>
+          </div>
+          <div class="dim-desc">68% of sales/marketing use AI daily. 75% of enterprises adopted AI in marketing.</div>
+          <div class="dim-question">Are AI-powered insights in production?</div>
+        </div>
+        <div class="dim-card anim-5">
+          <div class="dim-top">
+            <div class="dim-name">Talent & Readiness</div>
+            <div class="dim-stat">20%</div>
+          </div>
+          <div class="dim-desc">Only 20% of orgs say talent is AI-ready. Skills gap = #1 barrier.</div>
+          <div class="dim-question">Is your team trained and ready?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: MATURITY MODEL -->
+  <div class="slide s-maturity" data-notes="Based on the data and your scores, here's a maturity model. Phase 1, Experimenting — where most companies still are. Phase 2, Embedding — where I believe we should be RIGHT NOW. AI integrated into workflows, 20-30% AI code, AI in pipelines, literacy programs running. Phase 3, Scaling — our target by end of 2026. Where did your scores land? That tells you which phase you're in.">
+    <div class="bloom-bg"></div>
+    <div class="content">
+      <h2 class="anim-1">Where Should We Be?</h2>
+      <div class="phase-timeline">
+        <div class="phase-col anim-2">
+          <div class="phase-dot"></div>
+          <div class="phase-card">
+            <div class="phase-num">PHASE 1</div>
+            <div class="phase-title">Experimenting</div>
+            <div class="phase-range">Where most are</div>
+            <div class="phase-divider"></div>
+            <ul>
+              <li>Individual AI tool use</li>
+              <li>&lt;15% AI-authored code</li>
+              <li>Ad-hoc testing with AI</li>
+              <li>No AI staffing strategy</li>
+            </ul>
+          </div>
+        </div>
+        <div class="phase-col anim-3">
+          <div class="phase-dot"></div>
+          <div class="phase-card">
+            <div class="phase-num">PHASE 2</div>
+            <div class="phase-title">Embedding</div>
+            <div class="phase-range">Where you should be now</div>
+            <div class="phase-divider"></div>
+            <ul>
+              <li>AI in standard workflows</li>
+              <li>20-30% AI-authored code</li>
+              <li>AI in CI/CD pipelines</li>
+              <li>AI literacy programs live</li>
+            </ul>
+          </div>
+        </div>
+        <div class="phase-col anim-4">
+          <div class="phase-dot"></div>
+          <div class="phase-card">
+            <div class="phase-num">PHASE 3</div>
+            <div class="phase-title">Scaling</div>
+            <div class="phase-range">Target by EOY 2026</div>
+            <div class="phase-divider"></div>
+            <ul>
+              <li>AI agents in production</li>
+              <li>30-40% AI-authored code</li>
+              <li>AI-first test strategy</li>
+              <li>Dedicated AI roles &amp; budget</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: FRAMEWORK -->
+  <div class="slide s-framework" data-notes="You just took the first version of this assessment. Here's the formal proposal: five dimensions, weighted, scored 1 to 5. Code & Delivery at 25%, Quality & Testing at 20%, Consumer Intelligence at 20%, Talent & Culture at 20%, and Governance at 15%. Do this quarterly, share scores anonymously across the council, and use the comparison to learn from each other. It's the scorecard you just filled out, done every quarter.">
+    <div class="bloom-bg"></div>
+    <div class="content">
+      <h2 class="anim-1">Proposed: Council-Wide Benchmark</h2>
+      <div class="sub anim-2">You just took the first version. Let's formalize it.</div>
+      <div class="fw-rows">
+        <div class="fw-row anim-3">
+          <div class="fw-dim">Code & Delivery</div>
+          <div class="fw-desc">% AI-authored code, CI/CD integration, agent deployment</div>
+          <div class="fw-weight">25%</div>
+        </div>
+        <div class="fw-row anim-4">
+          <div class="fw-dim">Quality & Testing</div>
+          <div class="fw-desc">AI in test automation, coverage %, defect prediction</div>
+          <div class="fw-weight">20%</div>
+        </div>
+        <div class="fw-row anim-5">
+          <div class="fw-dim">Consumer Intelligence</div>
+          <div class="fw-desc">AI-powered insights in prod, personalization, analytics</div>
+          <div class="fw-weight">20%</div>
+        </div>
+        <div class="fw-row anim-6">
+          <div class="fw-dim">Talent & Culture</div>
+          <div class="fw-desc">Training coverage, AI literacy, dedicated AI roles</div>
+          <div class="fw-weight">20%</div>
+        </div>
+        <div class="fw-row anim-7">
+          <div class="fw-dim">Governance & Scale</div>
+          <div class="fw-desc">Governance maturity, vendor strategy, risk management</div>
+          <div class="fw-weight">15%</div>
+        </div>
+      </div>
+      <div class="fw-cta anim-fade">
+        <strong>Score 1-5</strong> &middot; Quarterly self-assessment &middot; Anonymous council comparison
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: DISCUSSION -->
+  <div class="slide s-discuss" data-notes="'Where did your scores surprise you?' is more specific and personal. Would we commit to a shared benchmark? What dimensions am I missing? And the hardest one — how do we hold each other accountable without it becoming a box-checking exercise? I need three volunteers willing to fill out the full scorecard for next quarter so we have real data to compare. Who's in?">
+    <div class="bloom-bg"></div>
+    <div class="content">
+      <div class="rule anim-1" style="background: var(--lavender);"></div>
+      <h2 class="anim-2">Let's Discuss</h2>
+      <ol class="discuss-list">
+        <li class="anim-3"><span class="q-num">1</span> Where did your scores surprise you?</li>
+        <li class="anim-4"><span class="q-num">2</span> Is a council-wide benchmark something we'd commit to?</li>
+        <li class="anim-5"><span class="q-num">3</span> What dimensions are we missing?</li>
+        <li class="anim-6"><span class="q-num">4</span> How do we stay accountable without it becoming performative?</li>
+      </ol>
+    </div>
+    <div class="qr-corner anim-fade">
+      <div class="qr-block">
+        <div class="qr-placeholder" style="width: 80px; height: 80px; font-size: 32px;">📱</div>
+        <div class="qr-label">SCAN TO SCORE</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Slide counter -->
+<div class="slide-counter" id="slideCounter">1 / 7</div>
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar" style="width: 14.28%;"></div>
+
+<!-- Presenter notes -->
+<div class="notes-overlay" id="notesOverlay">
+  <div class="notes-label">PRESENTER NOTES</div>
+  <div id="notesContent"></div>
+</div>
+
+<!-- Help -->
+<div class="help-overlay" id="helpOverlay">
+  <div class="notes-label" style="margin-bottom: 16px;">KEYBOARD SHORTCUTS</div>
+  <div><kbd>&rarr;</kbd> <kbd>Space</kbd> &mdash; Next slide</div>
+  <div><kbd>&larr;</kbd> &mdash; Previous slide</div>
+  <div><kbd>N</kbd> &mdash; Toggle presenter notes</div>
+  <div><kbd>F</kbd> &mdash; Toggle fullscreen</div>
+  <div><kbd>?</kbd> &mdash; Toggle this help</div>
+  <div><kbd>1</kbd>-<kbd>7</kbd> &mdash; Jump to slide</div>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+const total = slides.length;
+
+function goTo(n) {
+  if (n < 0 || n >= total) return;
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  document.getElementById('slideCounter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progressBar').style.width = `${((current + 1) / total) * 100}%`;
+  // Update notes
+  const notes = slides[current].dataset.notes || '';
+  document.getElementById('notesContent').textContent = notes;
+}
+
+function next() { goTo(current + 1); }
+function prev() { goTo(current - 1); }
+
+function toggleNotes() {
+  document.getElementById('notesOverlay').classList.toggle('show');
+}
+function toggleHelp() {
+  document.getElementById('helpOverlay').classList.toggle('show');
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  // Close help on any nav key
+  if (['ArrowRight', 'ArrowLeft', ' '].includes(e.key)) {
+    document.getElementById('helpOverlay').classList.remove('show');
+  }
+
+  switch(e.key) {
+    case 'ArrowRight':
+    case ' ':
+      e.preventDefault();
+      next();
+      break;
+    case 'ArrowLeft':
+      prev();
+      break;
+    case 'n':
+    case 'N':
+      toggleNotes();
+      break;
+    case 'f':
+    case 'F':
+      toggleFullscreen();
+      break;
+    case '?':
+      toggleHelp();
+      break;
+    default:
+      // Number keys to jump
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= total) goTo(num - 1);
+  }
+});
+
+// Touch/click navigation
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) {
+    dx < 0 ? next() : prev();
+  }
+});
+
+// Click sides to navigate
+document.addEventListener('click', (e) => {
+  const x = e.clientX / window.innerWidth;
+  if (x > 0.75) next();
+  else if (x < 0.25) prev();
+});
+
+// Init notes
+document.getElementById('notesContent').textContent = slides[0].dataset.notes || '';
+</script>
+</body>
+</html>
