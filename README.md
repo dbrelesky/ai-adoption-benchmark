@@ -8,7 +8,22 @@ Session materials for the AI adoption benchmarking discussion.
 
 **[Take the AI Adoption Scorecard →](https://dbrelesky.github.io/ai-adoption-benchmark/poll/)**
 
-Score your organization 1-5 on five dimensions: Engineering, Testing & QA, Consumer Insights, Talent & Readiness, and Governance & Scale.
+Score your organization 1-5 on five dimensions: Engineering, Testing & QA, Consumer Insights, Talent & Readiness, and Governance & Scale. Room results aggregate in real-time so you can see the group average.
+
+### Enable Live Room Results (2-minute setup)
+
+The scorecard works for individual scoring out of the box. To enable **live room-wide results** (everyone sees the group average), you need a free Firebase Realtime Database:
+
+1. Go to [console.firebase.google.com](https://console.firebase.google.com) and create a project (any name, e.g. "ai-scorecard")
+2. Skip Google Analytics when prompted
+3. Go to **Build → Realtime Database → Create Database** → choose any region → start in **Test mode**
+4. Go to **Project Settings** (gear icon) → General → scroll to "Your apps" → click the **</>** web icon → register app (any nickname)
+5. Copy the `firebaseConfig` object
+6. Open `poll/index.html`, find the `FIREBASE_CONFIG` object near the top of the `<script>` block, and paste your config values
+
+That's it. Every phone that opens the scorecard will now push scores to Firebase and the **Room** tab will show live averages.
+
+> **Tip:** Change the `SESSION_ID` constant in the script for each meeting to start fresh results.
 
 ## Session Materials
 
