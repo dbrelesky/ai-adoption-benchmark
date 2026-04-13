@@ -5,126 +5,278 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AI Adoption Scorecard</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg-deep: #120C26;
+    --bg-mid: #1C1434;
+    --bg-card: #231A41;
+    --bg-card-hover: #2B2050;
+    --ghost: #3C345A;
+    --ghost-light: #4D4470;
+    --white: #F0EEF5;
+    --white-dim: #8C879F;
+    --coral: #FF7F66;
+    --coral-glow: rgba(255, 127, 102, 0.15);
+    --amber: #FFC346;
+    --amber-glow: rgba(255, 195, 70, 0.15);
+    --cyan: #5AD2E6;
+    --cyan-glow: rgba(90, 210, 230, 0.15);
+    --green: #78DCA0;
+    --green-glow: rgba(120, 220, 160, 0.15);
+    --lavender: #A08CDC;
+    --lavender-glow: rgba(160, 140, 220, 0.15);
+  }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: #36454F;
-    color: #F4F5F7;
+    background: var(--bg-deep);
+    color: var(--white);
     min-height: 100vh;
     padding: 0;
   }
 
+  /* Subtle animated background gradient */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 600px 600px at 30% 15%, var(--coral-glow), transparent),
+      radial-gradient(ellipse 500px 500px at 70% 30%, var(--cyan-glow), transparent),
+      radial-gradient(ellipse 550px 550px at 40% 70%, var(--lavender-glow), transparent),
+      radial-gradient(ellipse 400px 400px at 80% 80%, var(--green-glow), transparent);
+    pointer-events: none;
+    z-index: 0;
+    animation: bloomShift 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes bloomShift {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+
   .header {
-    background: #2A343C;
-    padding: 20px 24px 16px;
-    border-bottom: 2px solid #708090;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(35,26,65,0.95) 0%, rgba(18,12,38,0.8) 100%);
+    padding: 24px 24px 18px;
+    border-bottom: 1px solid var(--ghost);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   .header h1 {
-    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: 1px;
-    color: #fff;
+    letter-spacing: 3px;
+    color: var(--white);
   }
   .header p {
-    font-size: 13px;
-    color: #95A0AE;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--white-dim);
     margin-top: 4px;
+    letter-spacing: 0.5px;
   }
 
   .container {
+    position: relative;
+    z-index: 1;
     max-width: 480px;
     margin: 0 auto;
     padding: 16px;
   }
 
-  .instructions {
-    background: #2A343C;
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    font-size: 13px;
-    color: #D3D3D3;
-    line-height: 1.5;
+  /* Tab Navigation */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 4px;
+    border: 1px solid var(--ghost);
   }
-  .instructions strong { color: #fff; }
-
-  .dimension {
-    background: #2A343C;
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    color: var(--white-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
     border-radius: 10px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    border-left: 3px solid #708090;
   }
+  .tab-btn.active {
+    color: var(--white);
+    background: linear-gradient(135deg, var(--ghost) 0%, var(--ghost-light) 100%);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .tab-btn .badge {
+    display: inline-block;
+    background: var(--lavender);
+    color: var(--bg-deep);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .instructions {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--white-dim);
+    line-height: 1.6;
+    border: 1px solid var(--ghost);
+  }
+  .instructions strong { color: var(--white); }
+
+  /* Dimension Cards — each gets its own accent */
+  .dimension {
+    background: var(--bg-card);
+    border-radius: 16px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid var(--ghost);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+  }
+  .dimension::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 3px 0 0 3px;
+  }
+  .dimension[data-dim="engineering"]::before { background: var(--coral); }
+  .dimension[data-dim="testing"]::before { background: var(--cyan); }
+  .dimension[data-dim="insights"]::before { background: var(--amber); }
+  .dimension[data-dim="talent"]::before { background: var(--green); }
+  .dimension[data-dim="governance"]::before { background: var(--lavender); }
+
+  .dimension[data-dim="engineering"].answered { border-color: var(--coral); box-shadow: 0 0 20px var(--coral-glow); }
+  .dimension[data-dim="testing"].answered { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .dimension[data-dim="insights"].answered { border-color: var(--amber); box-shadow: 0 0 20px var(--amber-glow); }
+  .dimension[data-dim="talent"].answered { border-color: var(--green); box-shadow: 0 0 20px var(--green-glow); }
+  .dimension[data-dim="governance"].answered { border-color: var(--lavender); box-shadow: 0 0 20px var(--lavender-glow); }
 
   .dim-header {
-    padding: 14px 16px 6px;
+    padding: 16px 18px 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
   .dim-title {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    color: #95A0AE;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--white-dim);
     text-transform: uppercase;
   }
   .dim-benchmark {
-    font-size: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
     font-weight: 700;
-    color: #fff;
   }
+  .dimension[data-dim="engineering"] .dim-benchmark { color: var(--coral); }
+  .dimension[data-dim="testing"] .dim-benchmark { color: var(--cyan); }
+  .dimension[data-dim="insights"] .dim-benchmark { color: var(--amber); }
+  .dimension[data-dim="talent"] .dim-benchmark { color: var(--green); }
+  .dimension[data-dim="governance"] .dim-benchmark { color: var(--lavender); }
 
   .dim-question {
-    padding: 0 16px 8px;
+    padding: 0 18px 8px;
     font-size: 14px;
     font-weight: 500;
-    color: #D3D3D3;
+    color: var(--white);
   }
 
   .dim-context {
-    padding: 0 16px 10px;
+    padding: 0 18px 10px;
     font-size: 11px;
-    color: #708090;
+    color: var(--white-dim);
     line-height: 1.4;
+    opacity: 0.7;
   }
 
   .rating-row {
     display: flex;
-    padding: 0 16px 14px;
-    gap: 6px;
+    padding: 0 18px 14px;
+    gap: 8px;
   }
 
   .rating-btn {
     flex: 1;
-    padding: 10px 0;
-    border: 1.5px solid #4A5A68;
-    border-radius: 6px;
+    padding: 12px 0;
+    border: 1.5px solid var(--ghost);
+    border-radius: 10px;
     background: transparent;
-    color: #95A0AE;
-    font-size: 15px;
+    color: var(--white-dim);
+    font-size: 16px;
     font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    font-family: 'JetBrains Mono', monospace;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
   }
-  .rating-btn:active { transform: scale(0.95); }
-  .rating-btn.selected {
-    background: #F4F5F7;
-    color: #36454F;
-    border-color: #F4F5F7;
+  .rating-btn:active { transform: scale(0.92); }
+
+  /* Per-dimension selected states */
+  .dimension[data-dim="engineering"] .rating-btn.selected {
+    background: var(--coral);
+    color: var(--bg-deep);
+    border-color: var(--coral);
+    box-shadow: 0 0 16px var(--coral-glow);
+  }
+  .dimension[data-dim="testing"] .rating-btn.selected {
+    background: var(--cyan);
+    color: var(--bg-deep);
+    border-color: var(--cyan);
+    box-shadow: 0 0 16px var(--cyan-glow);
+  }
+  .dimension[data-dim="insights"] .rating-btn.selected {
+    background: var(--amber);
+    color: var(--bg-deep);
+    border-color: var(--amber);
+    box-shadow: 0 0 16px var(--amber-glow);
+  }
+  .dimension[data-dim="talent"] .rating-btn.selected {
+    background: var(--green);
+    color: var(--bg-deep);
+    border-color: var(--green);
+    box-shadow: 0 0 16px var(--green-glow);
+  }
+  .dimension[data-dim="governance"] .rating-btn.selected {
+    background: var(--lavender);
+    color: var(--bg-deep);
+    border-color: var(--lavender);
+    box-shadow: 0 0 16px var(--lavender-glow);
   }
 
   .rating-labels {
     display: flex;
     justify-content: space-between;
-    padding: 0 16px 12px;
+    padding: 0 18px 14px;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
-    color: #708090;
+    color: var(--ghost-light);
     letter-spacing: 0.5px;
   }
 
@@ -136,114 +288,367 @@
 
   .submit-btn {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     border: none;
-    border-radius: 8px;
-    background: #708090;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--lavender) 0%, var(--cyan) 100%);
+    color: var(--bg-deep);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
     cursor: pointer;
-    transition: all 0.15s ease;
-    opacity: 0.4;
+    transition: all 0.2s ease;
+    opacity: 0.25;
     pointer-events: none;
+    text-transform: uppercase;
   }
   .submit-btn.active {
     opacity: 1;
     pointer-events: auto;
-    background: #F4F5F7;
-    color: #36454F;
+    box-shadow: 0 4px 24px rgba(90, 210, 230, 0.3), 0 4px 24px rgba(160, 140, 220, 0.3);
   }
   .submit-btn:active { transform: scale(0.98); }
 
-  /* Results view */
-  .results-view { display: none; }
-  .results-view.show { display: block; }
-  .form-view.hide { display: none; }
-
+  /* My Results */
   .result-card {
-    background: #2A343C;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 10px;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    border-left: 3px solid #708090;
+    gap: 16px;
+    border: 1px solid var(--ghost);
+    position: relative;
+    overflow: hidden;
   }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+  .result-card:nth-child(1)::before { background: var(--coral); }
+  .result-card:nth-child(2)::before { background: var(--cyan); }
+  .result-card:nth-child(3)::before { background: var(--amber); }
+  .result-card:nth-child(4)::before { background: var(--green); }
+  .result-card:nth-child(5)::before { background: var(--lavender); }
+
   .result-score {
-    font-size: 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
     font-weight: 700;
-    color: #fff;
-    min-width: 40px;
+    color: var(--white);
+    min-width: 44px;
     text-align: center;
   }
   .result-info { flex: 1; }
   .result-dim {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    color: #95A0AE;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    color: var(--white-dim);
+    text-transform: uppercase;
   }
   .result-bar-bg {
-    margin-top: 6px;
+    margin-top: 8px;
     height: 6px;
-    background: #4A5A68;
+    background: var(--ghost);
     border-radius: 3px;
     overflow: hidden;
   }
   .result-bar {
     height: 100%;
-    background: #D3D3D3;
     border-radius: 3px;
-    transition: width 0.6s ease;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  .result-card:nth-child(1) .result-bar { background: linear-gradient(90deg, var(--coral), #FF9980); }
+  .result-card:nth-child(2) .result-bar { background: linear-gradient(90deg, var(--cyan), #80E8F0); }
+  .result-card:nth-child(3) .result-bar { background: linear-gradient(90deg, var(--amber), #FFD680); }
+  .result-card:nth-child(4) .result-bar { background: linear-gradient(90deg, var(--green), #A0EECA); }
+  .result-card:nth-child(5) .result-bar { background: linear-gradient(90deg, var(--lavender), #C0B0EE); }
 
   .total-section {
-    background: #2A343C;
-    border-radius: 10px;
-    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 28px 20px;
     text-align: center;
-    margin-top: 16px;
-    border: 1.5px solid #708090;
+    margin-top: 20px;
+    border: 1px solid var(--ghost-light);
+    position: relative;
+    overflow: hidden;
+  }
+  .total-section::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, var(--lavender-glow), transparent 60%);
+    pointer-events: none;
   }
   .total-label {
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    color: #95A0AE;
-    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--white-dim);
+    font-weight: 500;
+    position: relative;
   }
   .total-score {
-    font-size: 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 56px;
     font-weight: 700;
-    color: #fff;
+    color: var(--white);
     margin: 4px 0;
+    position: relative;
   }
   .total-max {
-    font-size: 13px;
-    color: #708090;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ghost-light);
+    position: relative;
   }
   .total-phase {
-    margin-top: 10px;
-    font-size: 14px;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
     font-weight: 600;
-    color: #D3D3D3;
-    padding: 6px 16px;
-    background: #36454F;
+    letter-spacing: 1px;
+    color: var(--bg-deep);
+    padding: 6px 20px;
+    background: linear-gradient(135deg, var(--lavender), var(--cyan));
     border-radius: 20px;
     display: inline-block;
+    position: relative;
   }
 
   .reset-link {
     display: block;
     text-align: center;
-    margin-top: 20px;
-    font-size: 13px;
-    color: #708090;
-    text-decoration: underline;
+    margin-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ghost-light);
+    text-decoration: none;
     cursor: pointer;
     padding-bottom: 30px;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .reset-link:hover { color: var(--white-dim); }
+
+  /* Room Results */
+  .room-view { display: none; }
+  .room-view.show { display: block; }
+  .form-view, .my-results-view { display: none; }
+  .form-view.show, .my-results-view.show { display: block; }
+
+  .room-status {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid var(--ghost);
+    position: relative;
+    overflow: hidden;
+  }
+  .room-status::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, var(--cyan-glow), transparent 60%);
+    pointer-events: none;
+    animation: bloomShift 15s ease-in-out infinite alternate;
+  }
+  .room-status .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--cyan);
+    position: relative;
+  }
+  .room-status .count-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--white-dim);
+    font-weight: 500;
+    margin-top: 2px;
+    position: relative;
+  }
+  .room-waiting {
+    font-size: 12px;
+    color: var(--ghost-light);
+    margin-top: 8px;
+    position: relative;
+  }
+
+  .room-avg-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border: 1px solid var(--ghost);
+    position: relative;
+    overflow: hidden;
+  }
+  .room-avg-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+  .room-avg-card:nth-child(1)::before { background: var(--coral); }
+  .room-avg-card:nth-child(2)::before { background: var(--cyan); }
+  .room-avg-card:nth-child(3)::before { background: var(--amber); }
+  .room-avg-card:nth-child(4)::before { background: var(--green); }
+  .room-avg-card:nth-child(5)::before { background: var(--lavender); }
+
+  .room-avg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .room-avg-dim {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--white-dim);
+    text-transform: uppercase;
+  }
+  .room-avg-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .room-bar-bg {
+    height: 8px;
+    background: var(--ghost);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .room-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .room-avg-card:nth-child(1) .room-bar { background: linear-gradient(90deg, var(--coral), #FF9980); }
+  .room-avg-card:nth-child(2) .room-bar { background: linear-gradient(90deg, var(--cyan), #80E8F0); }
+  .room-avg-card:nth-child(3) .room-bar { background: linear-gradient(90deg, var(--amber), #FFD680); }
+  .room-avg-card:nth-child(4) .room-bar { background: linear-gradient(90deg, var(--green), #A0EECA); }
+  .room-avg-card:nth-child(5) .room-bar { background: linear-gradient(90deg, var(--lavender), #C0B0EE); }
+
+  .room-spread {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ghost-light);
+    letter-spacing: 0.5px;
+  }
+
+  .room-total-section {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    margin-top: 20px;
+    border: 1px solid var(--ghost-light);
+    position: relative;
+    overflow: hidden;
+  }
+  .room-total-section::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, var(--cyan-glow), transparent 60%);
+    pointer-events: none;
+  }
+
+  .room-phase-breakdown {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  .phase-pill {
+    flex: 1;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px 6px;
+    text-align: center;
+    border: 1px solid var(--ghost);
+    position: relative;
+    overflow: hidden;
+  }
+  .phase-pill:nth-child(1) { border-bottom: 2px solid var(--coral); }
+  .phase-pill:nth-child(2) { border-bottom: 2px solid var(--cyan); }
+  .phase-pill:nth-child(3) { border-bottom: 2px solid var(--green); }
+
+  .phase-pill .phase-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .phase-pill:nth-child(1) .phase-count { color: var(--coral); }
+  .phase-pill:nth-child(2) .phase-count { color: var(--cyan); }
+  .phase-pill:nth-child(3) .phase-count { color: var(--green); }
+
+  .phase-pill .phase-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--white-dim);
+    font-weight: 500;
+    margin-top: 4px;
+  }
+
+  /* Firebase notice */
+  .setup-notice {
+    background: rgba(255, 195, 70, 0.08);
+    border: 1px solid rgba(255, 195, 70, 0.25);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--amber);
+    line-height: 1.5;
+    display: none;
+  }
+  .setup-notice strong { color: var(--amber); }
+
+  /* Connection status */
+  .conn-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .conn-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+  .conn-dot.offline { background: var(--coral); box-shadow: 0 0 6px var(--coral-glow); }
+  .conn-dot.local { background: var(--amber); box-shadow: 0 0 6px var(--amber-glow); }
+
+  /* Smooth scroll behavior */
+  html { scroll-behavior: smooth; }
+
+  /* Selection color */
+  ::selection {
+    background: var(--lavender);
+    color: var(--bg-deep);
   }
 </style>
 </head>
@@ -251,14 +656,23 @@
 
 <div class="header">
   <h1>AI ADOPTION SCORECARD</h1>
-  <p>Product Council  |  April 2026</p>
+  <p><span class="conn-dot local" id="connDot"></span> Product Council &middot; April 2026</p>
 </div>
 
 <div class="container">
 
-  <div class="form-view" id="formView">
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tabScore" onclick="switchTab('score')">Score</button>
+    <button class="tab-btn" id="tabMyResults" onclick="switchTab('myResults')">My Results</button>
+    <button class="tab-btn" id="tabRoom" onclick="switchTab('room')">Room <span class="badge" id="roomCount">0</span></button>
+  </div>
+
+  <div id="setupNotice" class="setup-notice"></div>
+
+  <!-- Scoring Form Tab -->
+  <div class="form-view show" id="formView">
     <div class="instructions">
-      <strong>Rate your organization 1-5</strong> on each dimension.
+      <strong>Rate your organization 1 &ndash; 5</strong> on each dimension.
       1 = no adoption, 5 = industry-leading.
     </div>
 
@@ -348,26 +762,91 @@
     </div>
 
     <div class="submit-section">
-      <button class="submit-btn" id="submitBtn" onclick="showResults()">See Your Score</button>
+      <button class="submit-btn" id="submitBtn" onclick="submitScores()">Submit & See Score</button>
     </div>
   </div>
 
-  <div class="results-view" id="resultsView">
-    <div id="resultCards"></div>
+  <!-- My Results Tab -->
+  <div class="my-results-view" id="myResultsView">
+    <div id="myResultCards"></div>
     <div class="total-section">
       <div class="total-label">YOUR TOTAL SCORE</div>
       <div class="total-score" id="totalScore">0</div>
       <div class="total-max">out of 25</div>
       <div class="total-phase" id="phaseLabel">-</div>
     </div>
-    <div class="reset-link" onclick="resetForm()">Take it again</div>
+    <div class="reset-link" onclick="resetForm()">take it again &rarr;</div>
+  </div>
+
+  <!-- Room Results Tab -->
+  <div class="room-view" id="roomView">
+    <div class="room-status">
+      <div class="count" id="roomResponseCount">0</div>
+      <div class="count-label">RESPONSES SUBMITTED</div>
+      <div class="room-waiting" id="roomWaiting">Waiting for responses...</div>
+    </div>
+
+    <div id="roomAvgCards"></div>
+
+    <div class="room-total-section" id="roomTotalSection" style="display:none;">
+      <div class="total-label">ROOM AVERAGE</div>
+      <div class="total-score" id="roomAvgTotal">0</div>
+      <div class="total-max">out of 25</div>
+      <div class="total-phase" id="roomPhaseLabel">-</div>
+    </div>
+
+    <div class="room-phase-breakdown" id="phaseBreakdown" style="display:none;">
+      <div class="phase-pill">
+        <div class="phase-count" id="phase1Count">0</div>
+        <div class="phase-name">EXPERIMENTING</div>
+      </div>
+      <div class="phase-pill">
+        <div class="phase-count" id="phase2Count">0</div>
+        <div class="phase-name">EMBEDDING</div>
+      </div>
+      <div class="phase-pill">
+        <div class="phase-count" id="phase3Count">0</div>
+        <div class="phase-name">SCALING</div>
+      </div>
+    </div>
+
+    <div style="padding-bottom: 30px;"></div>
   </div>
 
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
-const scores = {};
-const dimNames = {
+// ============================================================
+// FIREBASE CONFIG — Replace with your project's config
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD8DKbuQdg5pmVXxGAWYgYXltimwugLZcM",
+  authDomain: "ai-scorecard.firebaseapp.com",
+  databaseURL: "https://ai-scorecard-default-rtdb.firebaseio.com",
+  projectId: "ai-scorecard",
+  storageBucket: "ai-scorecard.firebasestorage.app",
+  messagingSenderId: "450207054628",
+  appId: "1:450207054628:web:bedcb1d7e00895d08ed1b1",
+  measurementId: "G-WS06RZCQMD"
+};
+
+const SESSION_ID = "product-council-apr-2026";
+
+// ============================================================
+// State
+// ============================================================
+const myScores = {};
+let myId = null;
+let db = null;
+let firebaseReady = false;
+let allResponses = {};
+
+const DIMS = ['engineering', 'testing', 'insights', 'talent', 'governance'];
+const DIM_NAMES = {
   engineering: "Engineering",
   testing: "Testing & QA",
   insights: "Consumer Insights",
@@ -375,68 +854,258 @@ const dimNames = {
   governance: "Governance & Scale"
 };
 
+// ============================================================
+// Initialize
+// ============================================================
+function init() {
+  myId = 'user_' + Math.random().toString(36).substr(2, 9);
+
+  if (FIREBASE_CONFIG.apiKey) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.database();
+      firebaseReady = true;
+      document.getElementById('connDot').className = 'conn-dot online';
+      listenForResponses();
+    } catch(e) {
+      console.warn('Firebase init failed:', e);
+      showSetupNotice('Firebase failed to initialize. Room results will not work.');
+      document.getElementById('connDot').className = 'conn-dot offline';
+    }
+  } else {
+    showSetupNotice(
+      '<strong>Firebase not configured.</strong> Individual scoring works fine. ' +
+      'To enable live room results, add your Firebase config to this file.'
+    );
+    document.getElementById('connDot').className = 'conn-dot local';
+  }
+}
+
+function showSetupNotice(html) {
+  const el = document.getElementById('setupNotice');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+// ============================================================
+// Tab Switching
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('formView').classList.remove('show');
+  document.getElementById('myResultsView').classList.remove('show');
+  document.getElementById('roomView').classList.remove('show');
+
+  if (tab === 'score') {
+    document.getElementById('tabScore').classList.add('active');
+    document.getElementById('formView').classList.add('show');
+  } else if (tab === 'myResults') {
+    document.getElementById('tabMyResults').classList.add('active');
+    document.getElementById('myResultsView').classList.add('show');
+  } else if (tab === 'room') {
+    document.getElementById('tabRoom').classList.add('active');
+    document.getElementById('roomView').classList.add('show');
+    renderRoomResults();
+  }
+}
+
+// ============================================================
+// Rating Buttons
+// ============================================================
 document.querySelectorAll('.rating-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     const dim = this.closest('.dimension').dataset.dim;
     const val = parseInt(this.dataset.value);
-    scores[dim] = val;
+    myScores[dim] = val;
 
-    // Update visual state
     this.closest('.rating-row').querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
     this.classList.add('selected');
 
-    // Check if all answered
-    if (Object.keys(scores).length === 5) {
+    // Add answered state to dimension card
+    this.closest('.dimension').classList.add('answered');
+
+    if (Object.keys(myScores).length === 5) {
       document.getElementById('submitBtn').classList.add('active');
     }
   });
 });
 
-function showResults() {
-  if (Object.keys(scores).length < 5) return;
+// ============================================================
+// Submit Scores
+// ============================================================
+function submitScores() {
+  if (Object.keys(myScores).length < 5) return;
 
-  document.getElementById('formView').classList.add('hide');
-  document.getElementById('resultsView').classList.add('show');
+  if (firebaseReady && db) {
+    const ref = db.ref('sessions/' + SESSION_ID + '/responses/' + myId);
+    ref.set({
+      scores: { ...myScores },
+      total: DIMS.reduce((sum, d) => sum + (myScores[d] || 0), 0),
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+  } else {
+    const total = DIMS.reduce((sum, d) => sum + (myScores[d] || 0), 0);
+    allResponses[myId] = { scores: { ...myScores }, total };
+    updateRoomBadge();
+  }
 
-  const container = document.getElementById('resultCards');
+  renderMyResults();
+  switchTab('myResults');
+}
+
+// ============================================================
+// My Results
+// ============================================================
+function renderMyResults() {
+  const container = document.getElementById('myResultCards');
   container.innerHTML = '';
-
   let total = 0;
-  Object.entries(scores).forEach(([dim, score]) => {
+
+  DIMS.forEach(dim => {
+    const score = myScores[dim] || 0;
     total += score;
     const card = document.createElement('div');
     card.className = 'result-card';
     card.innerHTML = `
       <div class="result-score">${score}</div>
       <div class="result-info">
-        <div class="result-dim">${dimNames[dim]}</div>
+        <div class="result-dim">${DIM_NAMES[dim]}</div>
         <div class="result-bar-bg"><div class="result-bar" style="width: 0%"></div></div>
       </div>
     `;
     container.appendChild(card);
-    // Animate bar
     setTimeout(() => {
       card.querySelector('.result-bar').style.width = (score / 5 * 100) + '%';
-    }, 100);
+    }, 150);
   });
 
   document.getElementById('totalScore').textContent = total;
-
-  let phase;
-  if (total <= 10) phase = 'Phase 1: Experimenting';
-  else if (total <= 18) phase = 'Phase 2: Embedding';
-  else phase = 'Phase 3: Scaling';
-  document.getElementById('phaseLabel').textContent = phase;
+  document.getElementById('phaseLabel').textContent = getPhase(total);
 }
 
+function getPhase(total) {
+  if (total <= 10) return 'Phase 1: Experimenting';
+  if (total <= 18) return 'Phase 2: Embedding';
+  return 'Phase 3: Scaling';
+}
+
+function getPhaseNum(total) {
+  if (total <= 10) return 1;
+  if (total <= 18) return 2;
+  return 3;
+}
+
+// ============================================================
+// Firebase Listener
+// ============================================================
+function listenForResponses() {
+  if (!db) return;
+  const ref = db.ref('sessions/' + SESSION_ID + '/responses');
+  ref.on('value', (snapshot) => {
+    allResponses = snapshot.val() || {};
+    updateRoomBadge();
+    if (document.getElementById('roomView').classList.contains('show')) {
+      renderRoomResults();
+    }
+  });
+}
+
+function updateRoomBadge() {
+  const count = Object.keys(allResponses).length;
+  document.getElementById('roomCount').textContent = count;
+}
+
+// ============================================================
+// Room Results Rendering
+// ============================================================
+function renderRoomResults() {
+  const entries = Object.values(allResponses);
+  const count = entries.length;
+
+  document.getElementById('roomResponseCount').textContent = count;
+
+  if (count === 0) {
+    document.getElementById('roomWaiting').style.display = 'block';
+    document.getElementById('roomTotalSection').style.display = 'none';
+    document.getElementById('phaseBreakdown').style.display = 'none';
+    document.getElementById('roomAvgCards').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('roomWaiting').style.display = 'none';
+  document.getElementById('roomTotalSection').style.display = 'block';
+  document.getElementById('phaseBreakdown').style.display = 'flex';
+
+  const avgByDim = {};
+  const minByDim = {};
+  const maxByDim = {};
+
+  DIMS.forEach(dim => {
+    let sum = 0, min = 6, max = 0;
+    entries.forEach(entry => {
+      const s = entry.scores ? entry.scores[dim] : 0;
+      sum += s;
+      if (s < min) min = s;
+      if (s > max) max = s;
+    });
+    avgByDim[dim] = sum / count;
+    minByDim[dim] = min;
+    maxByDim[dim] = max;
+  });
+
+  const container = document.getElementById('roomAvgCards');
+  container.innerHTML = '';
+
+  DIMS.forEach(dim => {
+    const avg = avgByDim[dim];
+    const card = document.createElement('div');
+    card.className = 'room-avg-card';
+    card.innerHTML = `
+      <div class="room-avg-header">
+        <span class="room-avg-dim">${DIM_NAMES[dim]}</span>
+        <span class="room-avg-score">${avg.toFixed(1)}</span>
+      </div>
+      <div class="room-bar-bg"><div class="room-bar" style="width: 0%"></div></div>
+      <div class="room-spread">
+        <span>Low: ${minByDim[dim]}</span>
+        <span>High: ${maxByDim[dim]}</span>
+      </div>
+    `;
+    container.appendChild(card);
+    setTimeout(() => {
+      card.querySelector('.room-bar').style.width = (avg / 5 * 100) + '%';
+    }, 150);
+  });
+
+  const avgTotal = entries.reduce((sum, e) => sum + (e.total || 0), 0) / count;
+  document.getElementById('roomAvgTotal').textContent = avgTotal.toFixed(1);
+  document.getElementById('roomPhaseLabel').textContent = getPhase(Math.round(avgTotal));
+
+  let p1 = 0, p2 = 0, p3 = 0;
+  entries.forEach(e => {
+    const p = getPhaseNum(e.total || 0);
+    if (p === 1) p1++;
+    else if (p === 2) p2++;
+    else p3++;
+  });
+  document.getElementById('phase1Count').textContent = p1;
+  document.getElementById('phase2Count').textContent = p2;
+  document.getElementById('phase3Count').textContent = p3;
+}
+
+// ============================================================
+// Reset
+// ============================================================
 function resetForm() {
-  Object.keys(scores).forEach(k => delete scores[k]);
+  Object.keys(myScores).forEach(k => delete myScores[k]);
   document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.dimension').forEach(d => d.classList.remove('answered'));
   document.getElementById('submitBtn').classList.remove('active');
-  document.getElementById('formView').classList.remove('hide');
-  document.getElementById('resultsView').classList.remove('show');
+  switchTab('score');
   window.scrollTo(0, 0);
 }
+
+init();
 </script>
 </body>
 </html>
