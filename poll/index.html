@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Adoption Scorecard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #36454F;
+    color: #F4F5F7;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .header {
+    background: #2A343C;
+    padding: 20px 24px 16px;
+    border-bottom: 2px solid #708090;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+  }
+  .header p {
+    font-size: 13px;
+    color: #95A0AE;
+    margin-top: 4px;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .instructions {
+    background: #2A343C;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #D3D3D3;
+    line-height: 1.5;
+  }
+  .instructions strong { color: #fff; }
+
+  .dimension {
+    background: #2A343C;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border-left: 3px solid #708090;
+  }
+
+  .dim-header {
+    padding: 14px 16px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dim-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: #95A0AE;
+    text-transform: uppercase;
+  }
+  .dim-benchmark {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .dim-question {
+    padding: 0 16px 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #D3D3D3;
+  }
+
+  .dim-context {
+    padding: 0 16px 10px;
+    font-size: 11px;
+    color: #708090;
+    line-height: 1.4;
+  }
+
+  .rating-row {
+    display: flex;
+    padding: 0 16px 14px;
+    gap: 6px;
+  }
+
+  .rating-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: 1.5px solid #4A5A68;
+    border-radius: 6px;
+    background: transparent;
+    color: #95A0AE;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rating-btn:active { transform: scale(0.95); }
+  .rating-btn.selected {
+    background: #F4F5F7;
+    color: #36454F;
+    border-color: #F4F5F7;
+  }
+
+  .rating-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px 12px;
+    font-size: 9px;
+    color: #708090;
+    letter-spacing: 0.5px;
+  }
+
+  .submit-section {
+    margin-top: 8px;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #708090;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .submit-btn.active {
+    opacity: 1;
+    pointer-events: auto;
+    background: #F4F5F7;
+    color: #36454F;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+
+  /* Results view */
+  .results-view { display: none; }
+  .results-view.show { display: block; }
+  .form-view.hide { display: none; }
+
+  .result-card {
+    background: #2A343C;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-left: 3px solid #708090;
+  }
+  .result-score {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    min-width: 40px;
+    text-align: center;
+  }
+  .result-info { flex: 1; }
+  .result-dim {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #95A0AE;
+  }
+  .result-bar-bg {
+    margin-top: 6px;
+    height: 6px;
+    background: #4A5A68;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .result-bar {
+    height: 100%;
+    background: #D3D3D3;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  .total-section {
+    background: #2A343C;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 16px;
+    border: 1.5px solid #708090;
+  }
+  .total-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #95A0AE;
+    font-weight: 600;
+  }
+  .total-score {
+    font-size: 48px;
+    font-weight: 700;
+    color: #fff;
+    margin: 4px 0;
+  }
+  .total-max {
+    font-size: 13px;
+    color: #708090;
+  }
+  .total-phase {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #D3D3D3;
+    padding: 6px 16px;
+    background: #36454F;
+    border-radius: 20px;
+    display: inline-block;
+  }
+
+  .reset-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #708090;
+    text-decoration: underline;
+    cursor: pointer;
+    padding-bottom: 30px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AI ADOPTION SCORECARD</h1>
+  <p>Product Council  |  April 2026</p>
+</div>
+
+<div class="container">
+
+  <div class="form-view" id="formView">
+    <div class="instructions">
+      <strong>Rate your organization 1-5</strong> on each dimension.
+      1 = no adoption, 5 = industry-leading.
+    </div>
+
+    <div class="dimension" data-dim="engineering">
+      <div class="dim-header">
+        <span class="dim-title">Engineering</span>
+        <span class="dim-benchmark">22-42%</span>
+      </div>
+      <div class="dim-question">How much of your code is AI-authored?</div>
+      <div class="dim-context">Industry avg: 22% of merged code. Leaders: 41-42%. Sweet spot: 25-40%.</div>
+      <div class="rating-row">
+        <button class="rating-btn" data-value="1">1</button>
+        <button class="rating-btn" data-value="2">2</button>
+        <button class="rating-btn" data-value="3">3</button>
+        <button class="rating-btn" data-value="4">4</button>
+        <button class="rating-btn" data-value="5">5</button>
+      </div>
+      <div class="rating-labels"><span>No adoption</span><span>Industry-leading</span></div>
+    </div>
+
+    <div class="dimension" data-dim="testing">
+      <div class="dim-header">
+        <span class="dim-title">Testing & QA</span>
+        <span class="dim-benchmark">89%</span>
+      </div>
+      <div class="dim-question">Is AI embedded in your test pipeline?</div>
+      <div class="dim-context">89% piloting AI QA. Industry avg: 25% auto coverage. 40% will have AI in CI/CD by EOY '26.</div>
+      <div class="rating-row">
+        <button class="rating-btn" data-value="1">1</button>
+        <button class="rating-btn" data-value="2">2</button>
+        <button class="rating-btn" data-value="3">3</button>
+        <button class="rating-btn" data-value="4">4</button>
+        <button class="rating-btn" data-value="5">5</button>
+      </div>
+      <div class="rating-labels"><span>No adoption</span><span>Industry-leading</span></div>
+    </div>
+
+    <div class="dimension" data-dim="insights">
+      <div class="dim-header">
+        <span class="dim-title">Consumer Insights</span>
+        <span class="dim-benchmark">68%</span>
+      </div>
+      <div class="dim-question">Are AI-powered insights in production?</div>
+      <div class="dim-context">68% of sales/marketing use AI daily. 75% of enterprises adopted AI in marketing.</div>
+      <div class="rating-row">
+        <button class="rating-btn" data-value="1">1</button>
+        <button class="rating-btn" data-value="2">2</button>
+        <button class="rating-btn" data-value="3">3</button>
+        <button class="rating-btn" data-value="4">4</button>
+        <button class="rating-btn" data-value="5">5</button>
+      </div>
+      <div class="rating-labels"><span>No adoption</span><span>Industry-leading</span></div>
+    </div>
+
+    <div class="dimension" data-dim="talent">
+      <div class="dim-header">
+        <span class="dim-title">Talent & Readiness</span>
+        <span class="dim-benchmark">20%</span>
+      </div>
+      <div class="dim-question">Is your team trained and AI-ready?</div>
+      <div class="dim-context">Only 20% of orgs say talent is AI-ready. Skills gap = #1 barrier. 60% have tool access.</div>
+      <div class="rating-row">
+        <button class="rating-btn" data-value="1">1</button>
+        <button class="rating-btn" data-value="2">2</button>
+        <button class="rating-btn" data-value="3">3</button>
+        <button class="rating-btn" data-value="4">4</button>
+        <button class="rating-btn" data-value="5">5</button>
+      </div>
+      <div class="rating-labels"><span>No adoption</span><span>Industry-leading</span></div>
+    </div>
+
+    <div class="dimension" data-dim="governance">
+      <div class="dim-header">
+        <span class="dim-title">Governance & Scale</span>
+        <span class="dim-benchmark">30%</span>
+      </div>
+      <div class="dim-question">Do you have mature AI governance?</div>
+      <div class="dim-context">85% plan to customize AI agents but only 21% have governance models. Infra readiness: 43%.</div>
+      <div class="rating-row">
+        <button class="rating-btn" data-value="1">1</button>
+        <button class="rating-btn" data-value="2">2</button>
+        <button class="rating-btn" data-value="3">3</button>
+        <button class="rating-btn" data-value="4">4</button>
+        <button class="rating-btn" data-value="5">5</button>
+      </div>
+      <div class="rating-labels"><span>No adoption</span><span>Industry-leading</span></div>
+    </div>
+
+    <div class="submit-section">
+      <button class="submit-btn" id="submitBtn" onclick="showResults()">See Your Score</button>
+    </div>
+  </div>
+
+  <div class="results-view" id="resultsView">
+    <div id="resultCards"></div>
+    <div class="total-section">
+      <div class="total-label">YOUR TOTAL SCORE</div>
+      <div class="total-score" id="totalScore">0</div>
+      <div class="total-max">out of 25</div>
+      <div class="total-phase" id="phaseLabel">-</div>
+    </div>
+    <div class="reset-link" onclick="resetForm()">Take it again</div>
+  </div>
+
+</div>
+
+<script>
+const scores = {};
+const dimNames = {
+  engineering: "Engineering",
+  testing: "Testing & QA",
+  insights: "Consumer Insights",
+  talent: "Talent & Readiness",
+  governance: "Governance & Scale"
+};
+
+document.querySelectorAll('.rating-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const dim = this.closest('.dimension').dataset.dim;
+    const val = parseInt(this.dataset.value);
+    scores[dim] = val;
+
+    // Update visual state
+    this.closest('.rating-row').querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+    this.classList.add('selected');
+
+    // Check if all answered
+    if (Object.keys(scores).length === 5) {
+      document.getElementById('submitBtn').classList.add('active');
+    }
+  });
+});
+
+function showResults() {
+  if (Object.keys(scores).length < 5) return;
+
+  document.getElementById('formView').classList.add('hide');
+  document.getElementById('resultsView').classList.add('show');
+
+  const container = document.getElementById('resultCards');
+  container.innerHTML = '';
+
+  let total = 0;
+  Object.entries(scores).forEach(([dim, score]) => {
+    total += score;
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `
+      <div class="result-score">${score}</div>
+      <div class="result-info">
+        <div class="result-dim">${dimNames[dim]}</div>
+        <div class="result-bar-bg"><div class="result-bar" style="width: 0%"></div></div>
+      </div>
+    `;
+    container.appendChild(card);
+    // Animate bar
+    setTimeout(() => {
+      card.querySelector('.result-bar').style.width = (score / 5 * 100) + '%';
+    }, 100);
+  });
+
+  document.getElementById('totalScore').textContent = total;
+
+  let phase;
+  if (total <= 10) phase = 'Phase 1: Experimenting';
+  else if (total <= 18) phase = 'Phase 2: Embedding';
+  else phase = 'Phase 3: Scaling';
+  document.getElementById('phaseLabel').textContent = phase;
+}
+
+function resetForm() {
+  Object.keys(scores).forEach(k => delete scores[k]);
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('submitBtn').classList.remove('active');
+  document.getElementById('formView').classList.remove('hide');
+  document.getElementById('resultsView').classList.remove('show');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
